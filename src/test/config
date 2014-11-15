@@ -1,0 +1,14 @@
+# don't change this file or it'll f#ck up the tests
+
+# empty lines, like the above, are okay;
+  # so are comments with preceding whitespace
+                                                                 
+# or lines that are only white (like the above, which ends here ^)
+
+int test_int=42        # comments are preceded by a 'pound' symbol and can be on
+double test_double=4.2 # their own lines with optional whitespace, or at the end
+int test_int=1024      # of variables.
+string test_string="alade##en"
+bool test_bool=true
+bool test_bool=false
+bool test_aladeen=aladeen
