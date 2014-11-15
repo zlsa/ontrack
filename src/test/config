@@ -2,7 +2,7 @@
 
 # empty lines, like the above, are okay;
   # so are comments with preceding whitespace
-                                                                 
+
 # or lines that are only white (like the above, which ends here ^)
 
 int test_int=42        # comments are preceded by a 'pound' symbol and can be on

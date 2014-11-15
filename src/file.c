@@ -7,7 +7,10 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include <sys/time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 /* BLOCK */
 
@@ -50,29 +53,76 @@ bool file_free(struct file_b *file) {
   return(false);
 }
 
+// creates the directory tree necessary to write to the file; returns
+// true if any directories were created
+bool file_mkdirs(char *filename) {
+
+  char *directory = file_path(filename);
+
+  struct stat st = {0};
+
+  if(stat(directory, &st) == -1) {
+    file_mkdirs(directory);
+    mkdir(directory, 0700);
+
+    FREE(directory);
+    return(true);
+  }
+
+  FREE(directory);
+  return(false);
+
+}
+
+// gets the file path (without the filename)
+char *file_path(char *filename) {
+
+  char *path = NULL;
+
+  int i;
+  int len    = strlen(filename);
+  int last_slash = 0;
+
+  if(len == 0) return NULL;
+
+  for(i=0; i<len; i++) {
+    if(filename[i] == '/') last_slash = i;
+  }
+
+  if(last_slash == 0) return NULL;
+
+  path = MALLOC(last_slash + 1);
+
+  strncpy(path, filename, last_slash);
+  path[last_slash + 1] = '\0';
+
+  return(path);
+
+}
+
 /* OPEN/CLOSE */
 
 // returns false on error
-bool file_open(struct file_b *file,char *filename,int mode) {
+bool file_open(struct file_b *file, char *filename, int mode) {
   ASSERT(file);
   ASSERT(filename);
   if(file->open) {
-    log_warn("attempted to open already-open file '%s'",file->filename);
+    log_warn("attempted to open already-open file '%s'", file->filename);
     return(false);
   }
   if(file->filename) FREE(file->filename);
   file->filename=MALLOC(strlen(filename)+1);
-  strncpy(file->filename,filename,strlen(filename)+1);
+  strncpy(file->filename, filename, strlen(filename)+1);
 
   char *cmode="r";
   if(mode == FILE_MODE_READ) cmode="r";
-  else if(mode == FILE_MODE_READ) cmode="w";
+  else if(mode == FILE_MODE_WRITE) cmode="w";
   else if(mode == FILE_MODE_APPEND) cmode="a";
-  else log_warn("while opening '%s': unexpected mode ID '%d', using FILE_MODE_READ (%d)",file->filename,mode,FILE_MODE_READ);
+  else log_warn("while opening '%s': unexpected mode ID '%d', using FILE_MODE_READ (%d)", file->filename, mode, FILE_MODE_READ);
   file->mode=mode;
   file->line=1;
 
-  file->fp=fopen(file->filename,cmode);
+  file->fp=fopen(file->filename, cmode);
 
   if(!file->fp) {
     file->err=errno;
@@ -92,10 +142,10 @@ bool file_close(struct file_b *file) {
   }
   if(file->fp) {
     if(fclose(file->fp) == EOF) {
-      log_never("could not close '%s', will pretend we did...",file->filename);
+      log_never("could not close '%s', will pretend we did...", file->filename);
     }
   } else {
-    log_never("file '%s' is supposed to be open but is not...",file->filename);
+    log_never("file '%s' is supposed to be open but is not...", file->filename);
     return(false);
   }
 
@@ -146,9 +196,9 @@ char *file_read_all(struct file_b *file) {
     log_warn("attempted to read from closed file");
     return(NULL);
   }
-  int read  = 0;
+  int read = 0;
   int chunk = CHUNK_START;
-  int size  = CHUNK_START;
+  int size = CHUNK_START;
   int temp;
   char *buffer = MALLOC(CHUNK_START+1);
   while(true) {
@@ -159,9 +209,9 @@ char *file_read_all(struct file_b *file) {
       break;
     }
     if(read >= size-2) {
-      chunk  *= 2;
-      size   += chunk;
-      buffer  = REALLOC(buffer, size);
+      chunk *= 2;
+      size  += chunk;
+      buffer = REALLOC(buffer, size);
     }
   }
   return(buffer);
@@ -182,7 +232,7 @@ int file_getc(struct file_b *file) {
   }
   if(c == EOF) {
     if(errno) {
-      log_warn("error while reading from '%s': %s",file->filename,strerror(errno));
+      log_warn("error while reading from '%s': %s", file->filename, strerror(errno));
       file->err=errno;
     } else {
       file->eof=true;
@@ -194,14 +244,14 @@ int file_getc(struct file_b *file) {
 }
 
 // returns c, or EOF for failure (should almost never happen)
-int file_ungetc(struct file_b *file,char c) {
+int file_ungetc(struct file_b *file, char c) {
   ASSERT(file);
   if(!file->open) {
     log_warn("attempted to unget closed file");
     return(EOF);
   }
   if(file->bufp-1 >= FILE_UNGETC_BUFFER_SIZE) {
-    log_never("ungot beyond FILE_UNGETC_BUFFER_SIZE (%d)",FILE_UNGETC_BUFFER_SIZE);
+    log_never("ungot beyond FILE_UNGETC_BUFFER_SIZE (%d)", FILE_UNGETC_BUFFER_SIZE);
     return(EOF);
   }
   if(c == EOF) {
@@ -221,9 +271,30 @@ int file_peek(struct file_b *file) {
     return(EOF);
   }
   int c=file_getc(file);
-  file_ungetc(file,c);
+  file_ungetc(file, c);
   return(c);
 }
+
+// writing
+
+int file_write(struct file_b *file, char *data) {
+  ASSERT(file);
+
+  if(!file->open) {
+    log_warn("attempted to write to closed file");
+    return(EOF);
+  }
+
+  int written = 0;
+  int len   = strlen(data);
+
+  while(written < len)
+    written += (int) fwrite(data + written, sizeof(char), len - written, file->fp);
+
+  return(written);
+}
+
+
 
 // SKIPPING
 
@@ -234,7 +305,7 @@ int file_skip_whitespace(struct file_b *file) {
     i++;
   }
   if(c != EOF) {
-    file_ungetc(file,c);
+    file_ungetc(file, c);
     i--;
   }
   return(i);
@@ -247,27 +318,27 @@ int file_skip_whitespace_no_newline(struct file_b *file) {
     i++;
   }
   if(c != EOF) {
-    file_ungetc(file,c);
+    file_ungetc(file, c);
     i--;
   }
   return(i);
 }
 
 // returns the number of extraneous non-whitespace characters until the stop
-int file_skip_to(struct file_b *file,char stop) {
+int file_skip_to(struct file_b *file, char stop) {
   int c;
   int i=0;
   while(((c=file_getc(file)) != EOF) && c != stop) {
     if(!isspace(c)) i++;
   }
   if(c != EOF) {
-    file_ungetc(file,c);
+    file_ungetc(file, c);
     if(!isspace(c)) i--;
   }
   return(i);
 }
 
-int file_skip_to_ignore_comment(struct file_b *file,char stop,char comment_start) {
+int file_skip_to_ignore_comment(struct file_b *file, char stop, char comment_start) {
   int c;
   int i=0;
   bool comment=false;
@@ -276,14 +347,14 @@ int file_skip_to_ignore_comment(struct file_b *file,char stop,char comment_start
     if(!isspace(c) && !comment) i++;
   }
   if(c != EOF && !comment) {
-    file_ungetc(file,c);
+    file_ungetc(file, c);
     if(!isspace(c)) i--;
   }
   return(i);
 }
 
 // reads until and NOT including 'stop'
-char *file_read_to(struct file_b *file,char stop) {
+char *file_read_to(struct file_b *file, char stop) {
   int size=FILE_TOKEN_START_SIZE;
   int c;
   int i=0;
@@ -293,13 +364,13 @@ char *file_read_to(struct file_b *file,char stop) {
     if(file->eof) break;
     if(i-1 >= size) {
       size*=2;
-      s=REALLOC(s,size);
+      s=REALLOC(s, size);
     }
     if(c != stop && c != '#' && !isspace(c)) {
       s[i++]=c;
       continue;
     }
-    file_ungetc(file,c);
+    file_ungetc(file, c);
     break;
   }
   s[i]='\0';
@@ -319,12 +390,12 @@ char *file_get_token(struct file_b *file) {
     if(file->eof) break;
     if(i-1 >= size) {
       size*=2;
-      s=REALLOC(s,size);
+      s=REALLOC(s, size);
     }
     if(istoken(c)) {
       s[i++]=c;
     } else {
-      file_ungetc(file,c);
+      file_ungetc(file, c);
       break;
     }
   }
@@ -332,28 +403,28 @@ char *file_get_token(struct file_b *file) {
   return(s);
 }
 
-// if error, returns pointer to string
-char *file_get_bool(struct file_b *file,bool *ptr) {
-  char *s=file_read_to(file,'\n');
-  if((!strcmp(s,"true")) ||
-     (!strcmp(s,"yes")) ||
-     (!strcmp(s,"on")) ||
-     (!strcmp(s,"1"))) *ptr=true;
-  else if((!strcmp(s,"false")) ||
-          (!strcmp(s,"no")) ||
-          (!strcmp(s,"off")) ||
-          (!strcmp(s,"0"))) *ptr=false;
-  else if(!strcmp(s,"aladeen")) *ptr=(rand()>(RAND_MAX/4)?true:false);
+// if error,  returns pointer to string
+char *file_get_bool(struct file_b *file, bool *ptr) {
+  char *s=file_read_to(file, '\n');
+  if((!strcmp(s, "true")) ||
+     (!strcmp(s, "yes")) ||
+     (!strcmp(s, "on")) ||
+     (!strcmp(s, "1"))) *ptr=true;
+  else if((!strcmp(s, "false")) ||
+          (!strcmp(s, "no")) ||
+          (!strcmp(s, "off")) ||
+          (!strcmp(s, "0"))) *ptr=false;
+  else if(!strcmp(s, "aladeen")) *ptr=(rand()>(RAND_MAX/4)?true:false);
   else return(s);
   FREE(s);
   return(NULL);
 }
 
-// if error, returns pointer to string
-char *file_get_int(struct file_b *file,int *ptr) {
-  char *s=file_read_to(file,'\n');
+// if error,  returns pointer to string
+char *file_get_int(struct file_b *file, int *ptr) {
+  char *s=file_read_to(file, '\n');
   char *temp;
-  *ptr=strtol(s,&temp,0);
+  *ptr=strtol(s, &temp, 0);
   if(s[0] != '\0' && temp[0] == '\0') {
     FREE(s);
     return(NULL);
@@ -362,11 +433,11 @@ char *file_get_int(struct file_b *file,int *ptr) {
   }
 }
 
-// if error, returns pointer to string
-char *file_get_double(struct file_b *file,double *ptr) {
-  char *s=file_read_to(file,'\n');
+// if error,  returns pointer to string
+char *file_get_double(struct file_b *file, double *ptr) {
+  char *s=file_read_to(file, '\n');
   char *temp;
-  *ptr=strtod(s,&temp);
+  *ptr=strtod(s, &temp);
   if(s[0] != '\0' && temp[0] == '\0') {
     FREE(s);
     return(NULL);
@@ -376,7 +447,7 @@ char *file_get_double(struct file_b *file,double *ptr) {
 }
 
 // returns number of characters read
-int file_get_string(struct file_b *file,char **ptr) {
+int file_get_string(struct file_b *file, char **ptr) {
   int size=FILE_TOKEN_START_SIZE;
   int c;
   int i=0;
@@ -389,14 +460,14 @@ int file_get_string(struct file_b *file,char **ptr) {
     if(file->eof) break;
     if(i-1 >= size) {
       size*=2;
-      s=REALLOC(s,size);
+      s=REALLOC(s, size);
     }
     if(c == '\\') {
       escape=true;
       continue;
     }
     if(c == '"' && !escape) {
-      //      file_ungetc(file,c);
+      //      file_ungetc(file, c);
       break;
     }
     if(escape) {
@@ -417,58 +488,69 @@ int file_get_string(struct file_b *file,char **ptr) {
 bool file_test(void) {
   log_test("   == FILE ====================================================");
 
-  bool passed=true;
-  bool status=false;
+  bool passed = true;
+  bool status = false;
+
+  char *path = file_path("test/file");
+  if(!strcmp(path, "test")) status = true;
+  log_test("%sfile_path(\"test/file\"); // = %s", BTOF(status), path);
+
+  FREE(path);
+
+  status = file_mkdirs("test/dir/subdir/foo.txt");
+  status = true; // pass even if directory was created
+  log_test("%sfile_mkdirs(\"test/dir/subdir/foo.txt\");", BTOF(status));
 
   struct file_b *file=file_new();
-  if(file) status=true;
-  if(!status) passed=false;
-  log_test("%sstruct file_b *file=file_new();",BTOF(status));
 
-  status=file_open(file,"test/file",FILE_MODE_READ);
-  log_test("%sfile_open(file,\"test/file\",FILE_MODE_READ);",BTOF(status));
+  if(file) status    = true;
+  if(!status) passed = false;
+  log_test("%sstruct file_b *file=file_new();", BTOF(status));
+
+  status = file_open(file, "test/file", FILE_MODE_READ);
+  log_test("%sfile_open(file, \"test/file\", FILE_MODE_READ);", BTOF(status));
 
   if(status) {
 
-    int c=file_getc(file);
-    status=(c=='1');
-    if(!status) passed=false;
-    log_test("%sfile_getc(file);",BTOF(status));
+    int c = file_getc(file);
+    status = (c == '1');
+    if(!status) passed = false;
+    log_test("%sfile_getc(file);", BTOF(status));
 
-    c=file_getc(file);
-    status=(c=='2');
-    if(!status) passed=false;
-    log_test("%sfile_getc(file);",BTOF(status));
+    c = file_getc(file);
+    status = (c=='2');
+    if(!status) passed = false;
+    log_test("%sfile_getc(file);", BTOF(status));
 
-    status=file_ungetc(file,c);
-    if(!status) passed=false;
-    log_test("%sfile_ungetc(file,c);",BTOF(status));
-    
-    c=file_getc(file);
-    status=(c=='2');
-    if(!status) passed=false;
-    log_test("%sfile_getc(file);",BTOF(status));
-    
-    char *token=file_get_token(file);
+    status = file_ungetc(file, c);
+    if(!status) passed = false;
+    log_test("%sfile_ungetc(file, c);", BTOF(status));
+
+    c = file_getc(file);
+    status = (c=='2');
+    if(!status) passed = false;
+    log_test("%sfile_getc(file);", BTOF(status));
+
+    char *token = file_get_token(file);
     if(!token) {
-      passed=false;
-      log_test("%sfile_get_token(file);",BTOF(false));
+      passed = false;
+      log_test("%sfile_get_token(file);", BTOF(false));
     } else {
-      status=(strncmp(token,"this_is_a_token",strlen(token))==0);
-      if(!status) passed=false;
-      log_test("%sfile_get_token(file);",BTOF(status));
+      status = (strncmp(token, "this_is_a_token", strlen(token)) == 0);
+      if(!status) passed = false;
+      log_test("%sfile_get_token(file);", BTOF(status));
       FREE(token);
     }
-    
+
     status=file_free(file);
-    log_test("%sfile_free(file);",BTOF(status));
+    log_test("%sfile_free(file);", BTOF(status));
     if(!status) passed=false;
 
   } else {
     passed=false;
   }
 
-  if(passed) log_test("%sfile passed",BTOF(passed));
-  else log_test("%sfile failed",BTOF(passed));
+  if(passed) log_test("%sfile passed", BTOF(passed));
+  else log_test("%sfile failed", BTOF(passed));
   return(passed);
 }

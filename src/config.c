@@ -8,7 +8,9 @@
 #include <string.h>
 #include <ctype.h>
 
-/* BLOCK */
+////////////////////////////////////////
+// BLOCK
+////////////////////////////////////////
 
 extern int memory_blocks;
 
@@ -51,7 +53,9 @@ bool config_free(struct config_b *config) {
   return(false);
 }
 
-/* ITEM BLOCK */
+////////////////////////////////////////
+// ITEM BLOCK
+////////////////////////////////////////
 
 struct config_item_b *config_item_new(void) {
   struct config_item_b *item=MALLOC(sizeof(struct config_item_b));
@@ -87,7 +91,9 @@ bool config_item_free(struct config_item_b *item) {
   return(false);
 }
 
-/* GET/SET */
+////////////////////////////////////////
+// CONFIG GET/SET
+////////////////////////////////////////
 
 int config_get_item_count(struct config_b *config) {
   return(config->items_used);
@@ -121,43 +127,73 @@ struct config_item_b *config_item_slot(struct config_b *config) {
 }
 
 // returns true if key already exists
-bool config_set_item(struct config_b *config,struct config_item_b *item,bool initial) {
+bool config_set_item(struct config_b *config, struct config_item_b *item) {
   ASSERT(config);
   ASSERT(item);
-  struct config_item_b *current=config_get_item(config,item->key);
-  bool existed=true;
+
+  bool existed = true;
+
+  struct config_item_b *current = config_get_item(config,item->key);
   if(!current) {
+    existed = false;
     config->items_used++;
-    existed=false;
-    current=config_item_slot(config);
-    current->key=MALLOC(strlen(item->key)+1);
+    current      = config_item_slot(config);
+    current->key = MALLOC(strlen(item->key)+1);
     strncpy(current->key,item->key,strlen(item->key)+1);
   }
+
   if((current->type != item->type) && existed) {
-    log_warn("type of '%s' changed from %s to %s",item->key,CONFIG_ITEM_TYPE(current->type),CONFIG_ITEM_TYPE(item->type));
+    log_warn("type of '%s' changed from %s to %s", item->key, CONFIG_ITEM_TYPE(current->type), CONFIG_ITEM_TYPE(item->type));
   }
-  if(current->type == CONFIG_ITEM_TYPE_STRING && current->value.string_value) FREE(current->value.string_value);
-  current->type=item->type;
+
+  if(current->type == CONFIG_ITEM_TYPE_STRING && current->value.string_value)
+    FREE(current->value.string_value);
+
+  current->type = item->type;
   switch(current->type) {
   case CONFIG_ITEM_TYPE_STRING:
-    current->value.string_value=MALLOC(strlen(item->value.string_value)+1);
+    current->value.string_value = MALLOC(strlen(item->value.string_value)+1);
     strncpy(current->value.string_value,item->value.string_value,strlen(item->value.string_value)+1);
     break;
   case CONFIG_ITEM_TYPE_DOUBLE:
-    current->value.double_value=item->value.double_value;
+    current->value.double_value = item->value.double_value;
     break;
   case CONFIG_ITEM_TYPE_BOOL:
-    current->value.bool_value=item->value.bool_value;
+    current->value.bool_value   = item->value.bool_value;
     break;
   case CONFIG_ITEM_TYPE_INT:
-    current->value.int_value=item->value.int_value;
+    current->value.int_value    = item->value.int_value;
     break;
   }
-  if(!initial) current->modified=true;
-  return(existed);
+  if(existed) {
+    current->modified = true;
+    return(true);
+  }
+  return(false);
 }
 
+////////////////////////////////////////
+// SOURCE
+////////////////////////////////////////
+
+int config_get_item_source(struct config_item_b *item) {
+  ASSERT(item);
+
+  return(item->source);
+}
+
+int config_set_item_source(struct config_item_b *item, int source) {
+  ASSERT(item);
+
+  if(item->source != source) item->modified = true;
+  item->source     = source;
+
+  return(source);
+}
+
+////////////////////////////////////////
 // VALUES
+////////////////////////////////////////
 
 int config_get_item_type(struct config_item_b *item) {
   ASSERT(item);
@@ -188,20 +224,27 @@ char *config_get_item_string(struct config_item_b *item) {
   return(item->value.string_value);
 }
 
-char *config_get_item_tostring(struct config_item_b *item) {
+char *config_get_item_to_string(struct config_item_b *item) {
   ASSERT(item);
+
   char *s;
-  int type=config_get_item_type(item);
+  int type = config_get_item_type(item);
   bool bool_value;
+
   switch(type) {
   case CONFIG_ITEM_TYPE_BOOL:
-    bool_value=config_get_item_bool(item);
-    s=MALLOC(strlen(BTOS(bool_value))+1);
-    strncpy(s,BTOS(bool_value),strlen(BTOS(bool_value))+1);
+    bool_value = config_get_item_bool(item);
+
+    s = MALLOC(strlen(BTOS(bool_value)) + 1);
+    strncpy(s, BTOS(bool_value), strlen(BTOS(bool_value)) + 1);
+    break;
+  case CONFIG_ITEM_TYPE_INT:
+    s = MALLOC(INT_ENOUGH + 2);
+    snprintf(s, INT_ENOUGH + 1, "%d", config_get_item_int(item));
     break;
   default:
     log_never("no handler for %s type",CONFIG_ITEM_TYPE(type));
-    return(NULL);
+    EXIT(EXIT_FAILURE);
     break;
   }
   return(s);
@@ -333,13 +376,52 @@ int config_load_item(struct config_item_b *item,struct file_b *file) {
   return(RETURN_SUCCESS);
 }
 
+int config_dump_item(struct config_item_b *item, struct file_b *file) {
+  ASSERT(item);
+  ASSERT(file);
+
+  switch(item->type) {
+  case CONFIG_ITEM_TYPE_NULL:
+    log_warn("null config item");
+    return(RETURN_SUCCESS);
+  case CONFIG_ITEM_TYPE_BOOL:
+    file_write(file, "bool   ");
+    break;
+  case CONFIG_ITEM_TYPE_INT:
+    file_write(file, "int    ");
+    break;
+  case CONFIG_ITEM_TYPE_DOUBLE:
+    file_write(file, "double ");
+    break;
+  case CONFIG_ITEM_TYPE_STRING:
+    file_write(file, "string ");
+    break;
+  case CONFIG_ITEM_TYPE_PATH:
+    file_write(file, "path   ");
+    break;
+  }
+
+  char *value = config_get_item_to_string(item);
+
+  file_write(file, item->key);
+  file_write(file, " = ");
+  file_write(file, value);
+  file_write(file, "\n");
+
+  FREE(value);
+
+  return(RETURN_SUCCESS);
+}
+
+// LOAD/DUMP
+
 bool config_load(struct config_b *config,struct file_b *file,int source) {
   bool errors=false;
   struct config_item_b *item;
   int status;
   while(true) {
-    item=config_item_new();
-    status=config_load_item(item,file);
+    item   = config_item_new();
+    status = config_load_item(item,file);
     if(status != RETURN_SUCCESS) {
       if(status != RETURN_FAILURE_NEWLINE && status != RETURN_FAILURE_EOF) {
         errors=true;
@@ -348,7 +430,7 @@ bool config_load(struct config_b *config,struct file_b *file,int source) {
       if(file->eof) break;
       continue;
     }
-    config_set_item(config,item,true);
+    config_set_item(config, item);
     config_item_free(item);
     if(file->eof) break;
   }
@@ -357,19 +439,63 @@ bool config_load(struct config_b *config,struct file_b *file,int source) {
   return(!errors);
 }
 
-/* READ/WRITE */
+bool config_dump(struct config_b *config, struct file_b *file, int source) {
+  bool errors = false;
+
+  int i;
+  int status;
+
+  for(i=0; i<config->items_used; i++) {
+    if(config->items[i]) {
+      if(source & config->items[i]->source || true) {
+        status &= config_dump_item(config->items[i], file);
+      }
+    }
+  }
+
+  errors = !status;
+
+  return(!errors);
+}
+
+////////////////////////////////////////
+// READ/WRITE
+////////////////////////////////////////
 
 // returns false if errors encountered
 bool config_read(struct config_b *config,char *filename,int source) {
-  struct file_b *file=file_new();
-  if(!file_open(file,filename,FILE_MODE_READ)) {
-    log_notice("could not read config file '%s': %s",filename,file_error(file));
+  struct file_b *file = file_new();
+
+  if(!file_open(file, filename, FILE_MODE_READ)) {
+    log_notice("could not load config file '%s': %s", filename, file_error(file));
     file_free(file);
     return(false);
   }
-  bool errors=config_load(config,file,source);
+
+  bool errors = config_load(config, file, source);
   file_close(file);
   file_free(file);
+  return(errors);
+}
+
+// writes all changed variables
+bool config_write(struct config_b *config, char *filename, int source) {
+
+  struct file_b *file = file_new();
+
+  file_mkdirs(filename);
+
+  if(!file_open(file, filename, FILE_MODE_WRITE)) {
+    log_notice("could not dump config file '%s': %s", filename, file_error(file));
+    file_free(file);
+    return(false);
+  }
+
+  bool errors = config_dump(config, file, source);
+
+  file_close(file);
+  file_free(file);
+
   return(errors);
 }
 

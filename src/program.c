@@ -17,22 +17,24 @@ extern struct program_b *program;
 
 struct program_b *program_new(void) {
   struct program_b *program=MALLOC(sizeof(struct program_b));
-  program->references=0;
+  program->references = 0;
 
-  program->argc=0;
-  program->argv=NULL;
-  program->exit_code=EXIT_SUCCESS;
+  program->argc = 0;
+  program->argv = NULL;
+  program->exit_code = EXIT_SUCCESS;
 
-  program->debug=0;
-  program->test=false;
+  program->debug   = 0;
+  program->test    = false;
 
-  program->quiet=0;
+  program->quiet   = 0;
 
-  program->help=false;
-  program->version=false;
+  program->help    = false;
+  program->version = false;
 
-  program->config=config_new();
-  program->window=window_new();
+  program->config  = config_new();
+  program->window  = window_new();
+
+  program->state   = PROGRAM_STATE_STARTUP;
 
   return(program_reference(program));
 }
@@ -78,22 +80,22 @@ bool program_parse(void) {
   int i=0; // the current argument
   char *arg=NULL;
   int mode=PROGRAM_PARSE_MODE_STRING;
-  for(i=1;i<program->argc;i++) {
-    arg=program->argv[i];
+  for(i=1; i<program->argc; i++) {
+    arg = program->argv[i];
     if((strlen(arg) >= 2) && (arg[0] == '-') && (arg[1] == '-')) {
-      mode=PROGRAM_PARSE_MODE_LONG;
-      arg+=2;
+      mode  = PROGRAM_PARSE_MODE_LONG;
+      arg  += 2;
     } else if((strlen(arg) > 1) && (arg[0] == '-')) {
-      mode=PROGRAM_PARSE_MODE_SHORT;
-      arg+=1;
+      mode  = PROGRAM_PARSE_MODE_SHORT;
+      arg  += 1;
     } else {
-      mode=PROGRAM_PARSE_MODE_STRING;
+      mode  = PROGRAM_PARSE_MODE_STRING;
     }
     if(mode == PROGRAM_PARSE_MODE_LONG) {
       if(strncmp(arg, "version", strlen(arg)+1) == 0) {
-        program->version=true;
+        program->version = true;
       } else if(strncmp(arg, "help", strlen(arg)+1) == 0) {
-        program->help=true;
+        program->help    = true;
       } else if(strncmp(arg, "verbose", strlen(arg)+1) == 0) {
         program->quiet--;
       } else if(strncmp(arg, "quiet", strlen(arg)+1) == 0) {
@@ -101,21 +103,21 @@ bool program_parse(void) {
       } else if(strncmp(arg, "debug", strlen(arg)+1) == 0) {
         program->debug++;
       } else if(strncmp(arg, "test", strlen(arg)+1) == 0) {
-        program->test=true;
+        program->test    = true;
       } else {
         log_warn("invalid long option '%s'", arg);
       }
     } else if(mode == PROGRAM_PARSE_MODE_SHORT) {
       unsigned int a;
       char option;
-      for(a=0;a<strlen(arg);a++) {
-        option=arg[a];
+      for(a=0; a<strlen(arg); a++) {
+        option = arg[a];
         if(option == 'd') {
           program->debug++;
         } else if(option == 'v') {
-          program->version=true;
+          program->version = true;
         } else if(option == 'h') {
-          program->help=true;
+          program->help    = true;
         } else if(option == 'q') {
           program->quiet++;
         } else {
@@ -128,17 +130,17 @@ bool program_parse(void) {
   }
   if(program->version) program_version();
   if(program->help) program_usage();
-  if(program->version ||program->help) EXIT(EXIT_SUCCESS);
+  if(program->version || program->help) EXIT(EXIT_SUCCESS);
   if(program->test) {
     log_notice("in testing mode");
   }
   if(program->test && program->quiet > 0) {
-    log_notice("in testing mode,  quiet is ignored");
-    program->quiet=0;
+    log_notice("in testing mode, quiet is ignored");
+    program->quiet = 0;
   }
   if(program->debug && program->quiet > 0) {
-    log_notice("in debug mode,  quiet is ignored");
-    program->quiet=0;
+    log_notice("in debug mode, quiet is ignored");
+    program->quiet = 0;
   }
   return(true);
 }
@@ -149,28 +151,24 @@ bool program_start(void) {
   int width       = 1024;
   int height      = 768;
   bool fullscreen = false;
-  config_read(program->config, "/usr/share/aurel/config", CONFIG_SOURCE_SYSTEM);
-  config_read(program->config, "/home/forest/.config/aurel/config", CONFIG_SOURCE_USER);
+  config_read(program->config, "/usr/share/ontrack/config", CONFIG_SOURCE_SYSTEM);
+  config_read(program->config, "/home/forest/.config/ontrack/config", CONFIG_SOURCE_USER);
 
-  struct config_item_b *item = config_get_item(program->config, "window.width");
-  if(item) {
-    width=config_get_item_int(item);
-  }
+  struct config_item_b *item;
 
-  item = config_get_item(program->config, "window.height");
-  if(item) {
-    height=config_get_item_int(item);
-  }
+  if((item = config_get_item(program->config, "window.width")) != NULL)
+    width = config_get_item_int(item);
 
-  item = config_get_item(program->config, "window.fullscreen");
-  if(item) {
-    fullscreen=config_get_item_bool(item);
-  }
+  if((item = config_get_item(program->config, "window.height")) != NULL)
+    height = config_get_item_int(item);
+
+  if((item = config_get_item(program->config, "window.fullscreen")) != NULL)
+    fullscreen = config_get_item_bool(item);
 
   window_start();
   window_set_size(program->window, width, height);
   window_set_fullscreen(program->window, fullscreen);
-  window_set_title(program->window, "aurel");
+  window_set_title(program->window, "onTrack");
   window_open(program->window);
 
   return(true);
@@ -178,4 +176,6 @@ bool program_start(void) {
 
 void program_end(void) {
   window_end();
+
+  config_write(program->config, "/home/forest/.config/ontrack/config", CONFIG_SOURCE_USER | CONFIG_SOURCE_RUNTIME);
 }

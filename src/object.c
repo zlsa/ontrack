@@ -8,20 +8,16 @@
 
 struct object_b *object_new(void) {
   struct object_b *object=MALLOC(sizeof(struct object_b));
-  object->references    = 0;
+  object->references = 0;
 
   glGenVertexArrays(1, &object->vertex_position_array);
 
   glGenBuffers(1, &object->vertex_buffer);
   glGenBuffers(1, &object->normal_buffer);
 
-  object->shader = NULL;
+  object->shader   = NULL;
 
   object->vertices = 0;
-
-  //  object->textures = NULL;
-  //  object->texture_allocated = 0;
-  //  object->texture_used = 0;
 
   return(object_reference(object));
 }
@@ -46,8 +42,10 @@ bool object_free(struct object_b *object) {
 bool object_set_shader(struct object_b *object, struct shader_b *shader) {
   ASSERT(object);
   ASSERT(shader);
+
   if(object->shader) shader_free(object->shader);
   object->shader = shader_reference(shader);
+
   return(true);
 }
 

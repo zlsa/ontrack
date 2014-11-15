@@ -32,6 +32,8 @@
 
 #define PRINT_GL_ERROR(exit) (print_gl_error(exit))
 
+#define INT_ENOUGH ((sizeof(char) * sizeof(int) - 1) / 3 + 2)
+
 /* FUNCTIONS */
 void *MALLOC(size_t size);
 void *REALLOC(void *ptr,size_t size);

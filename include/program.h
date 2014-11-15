@@ -12,6 +12,11 @@
 #define PROGRAM_PARSE_MODE_LONG   (1)
 #define PROGRAM_PARSE_MODE_SHORT  (2)
 
+#define PROGRAM_STATE_STARTUP     (0)
+#define PROGRAM_STATE_LOADING     (1)
+#define PROGRAM_STATE_RUNNING     (2)
+#define PROGRAM_STATE_SHUTDOWN    (3)
+
 /* BLOCKS */
 struct program_b {
   // block_b
@@ -32,9 +37,9 @@ struct program_b {
 
   // verbosity.
   // -1: print out more
-  // 0 : normal
-  // 1 : do not print out any meta-information or info.
-  // 2 : do not print out anything
+  //  0: normal
+  //  1: do not print out any meta-information or info.
+  //  2: do not print out anything
   int quiet;
 
   // help mode? (if this is true, program_parse() will call
@@ -50,6 +55,9 @@ struct program_b {
 
   // for the window
   struct window_b *window;
+
+  // state
+  int state;
 };
 
 /* FUNCTIONS */

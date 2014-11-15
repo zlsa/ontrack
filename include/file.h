@@ -15,6 +15,8 @@
 
 #define FILE_TOKEN_START_SIZE (16)
 
+#define FILE_PATH_CHUNK_SIZE    (128)
+
 #define istoken(c) (isalpha(c) || c == '.' || c == '_')
 
 /* BLOCKS */
@@ -33,14 +35,14 @@ struct file_b {
 
   // is the file currently open?
   bool open;
-  
+
   // ungetc buffer
   int bufp;
   char buffer[FILE_UNGETC_BUFFER_SIZE];
 
   // line number
   int line;
-  
+
   // end of file?
   bool eof;
 
@@ -58,14 +60,20 @@ bool file_free(struct file_b *file);
 bool file_open(struct file_b *file,char *filename,int mode);
 bool file_close(struct file_b *file);
 
+bool file_mkdirs(char *filename);
+char *file_path(char *filename);
+
 // errors
 char *file_error(struct file_b *file);
 
-// read/write
+// read
 char *file_read_all(struct file_b *file);
 int file_getc(struct file_b *file);
 int file_ungetc(struct file_b *file,char c);
 int file_peek(struct file_b *file);
+
+// write
+int file_write(struct file_b *file, char *data);
 
 // skip
 int file_skip_whitespace(struct file_b *file);
