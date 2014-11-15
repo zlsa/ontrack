@@ -151,8 +151,11 @@ bool program_start(void) {
   int width       = 1024;
   int height      = 768;
   bool fullscreen = false;
-  config_read(program->config, "/usr/share/ontrack/config", CONFIG_SOURCE_SYSTEM);
+
+  config_read(program->config, "/usr/share/ontrack/config",           CONFIG_SOURCE_SYSTEM);
   config_read(program->config, "/home/forest/.config/ontrack/config", CONFIG_SOURCE_USER);
+
+  config_vomit(program->config);
 
   struct config_item_b *item;
 

@@ -23,18 +23,22 @@
 #define CONFIG_SOURCE_RUNTIME (1<<3)
 
 #define CONFIG_ITEM_TYPE(t) (t==CONFIG_ITEM_TYPE_NULL?"null": \
-    (t==CONFIG_ITEM_TYPE_BOOL?"bool":                         \
-    (t==CONFIG_ITEM_TYPE_INT?"int":                           \
-    (t==CONFIG_ITEM_TYPE_DOUBLE?"double":                     \
-    (t==CONFIG_ITEM_TYPE_STRING?"string":                     \
-    (t==CONFIG_ITEM_TYPE_PATH?"path":"oops"))))))
+    (t==CONFIG_ITEM_TYPE_BOOL   ? "bool":                     \
+    (t==CONFIG_ITEM_TYPE_INT    ? "int":                      \
+    (t==CONFIG_ITEM_TYPE_DOUBLE ? "double":                   \
+    (t==CONFIG_ITEM_TYPE_STRING ? "string":                   \
+    (t==CONFIG_ITEM_TYPE_PATH   ? "path":"oops"))))))
+
+#define CONFIG_SOURCE(t) (t&CONFIG_SOURCE_UNKNOWN?"unknown": \
+    (t&CONFIG_SOURCE_SYSTEM ?  "system":                     \
+    (t&CONFIG_SOURCE_USER ?    "user":                       \
+    (t&CONFIG_SOURCE_RUNTIME ? "runtime":"oops"))))
 
 /* BLOCKS */
 struct config_item_b {
   // block stuff...
   int references;
 
-  // CONFIG_SOURCE_SYSTEM or CONFIG_SOURCE_USER
   int source;
 
   // the key (usually something like 'display.fov')
@@ -108,5 +112,8 @@ bool config_read(struct config_b *config,char *filename,int source);
 bool config_write(struct config_b *config, char *filename, int source);
 
 bool config_test(void);
+
+void config_vomit_item(struct config_item_b *item);
+void config_vomit(struct config_b *config);
 
 #endif

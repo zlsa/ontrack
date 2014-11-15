@@ -90,13 +90,9 @@ int main(int argc,char **argv) {
 
   program_start();
 
-  exit(0);
-
-  struct world_b *world = world_new();
-
   glfwMakeContextCurrent(program->window->window);
 
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
 
   float last_time = glfwGetTime();
   int frames = 0;
@@ -137,13 +133,11 @@ int main(int argc,char **argv) {
     glRotatef((sin(glfwGetTime() * 0.5) + 1.2) * 30, 1.0f, 0.0f, 0.0f);
     glRotatef((float) glfwGetTime() * 10.0, 0.0f, 1.0f, 0.0f);
 
-#if 0
     glBegin(GL_TRIANGLES);
     glVertex3f( -0.6f, -0.4f, 0.0f);
     glVertex3f(  0.6f, -0.4f, 0.0f);
     glVertex3f(  0.0f,  0.6f, 0.0f);
     glEnd();
-#endif
 
     glfwSwapBuffers(program->window->window);
 
@@ -161,8 +155,6 @@ int main(int argc,char **argv) {
     PRINT_GL_ERROR(true);
     //    clear_gl_error();
   }
-
-  world_free(world);
 
   return(EXIT_SUCCESS);
 }

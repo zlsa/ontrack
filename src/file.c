@@ -94,7 +94,7 @@ char *file_path(char *filename) {
   path = MALLOC(last_slash + 1);
 
   strncpy(path, filename, last_slash);
-  path[last_slash + 1] = '\0';
+  path[last_slash] = '\0';
 
   return(path);
 
@@ -491,9 +491,9 @@ bool file_test(void) {
   bool passed = true;
   bool status = false;
 
-  char *path = file_path("test/file");
-  if(!strcmp(path, "test")) status = true;
-  log_test("%sfile_path(\"test/file\"); // = %s", BTOF(status), path);
+  char *path = file_path("test/file/foo/bar");
+  if(!strcmp(path, "test/file/foo")) status = true;
+  log_test("%sfile_path(\"test/file/foo/bar\"); // = %s", BTOF(status), path);
 
   FREE(path);
 
