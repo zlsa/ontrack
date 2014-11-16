@@ -10,6 +10,7 @@
 #include "shader.h"
 #include "object.h"
 #include "world.h"
+#include "image.h"
 
 #include "main.h"
 
@@ -63,12 +64,13 @@ int main(int argc,char **argv) {
   /* TESTING ONLY */
   if(program->test) {
     int passed = 0;
-    int total  = 2;
+    int total  = 3;
 
     log_test("(note that these tests require you to run from $ONTRACK_ROOT/src)");
 
     if(file_test())   passed++;
     if(config_test()) passed++;
+    if(image_test())  passed++;
 
     log_test("   == RESULTS =================================================");
 

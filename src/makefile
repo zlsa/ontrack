@@ -3,11 +3,11 @@
 
 FLAGS=-Wall -Wextra -g
 CFLAGS=$(shell pkg-config --cflags glfw3)
-LDFLAGS=$(shell pkg-config --libs glfw3) -lGL -lm -lGLEW -lGLU
+LDFLAGS=$(shell pkg-config --libs glfw3) -lGL -lm -lGLEW -lGLU -lwebp
 
 CC=gcc
 
-OBJS=util.o block.o program.o log.o file.o config.o window.o shader.o object.o world.o main.o
+OBJS=util.o block.o program.o log.o file.o config.o window.o shader.o object.o world.o image.o main.o
 
 down:
 	cd ../ && make src

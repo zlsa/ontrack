@@ -5,6 +5,7 @@
 /* INCLUDES */
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 
 /* DEFINES */
 #define FILE_MODE_READ   (0)
@@ -68,6 +69,8 @@ char *file_error(struct file_b *file);
 
 // read
 char *file_read_all(struct file_b *file);
+uint8_t *file_read_all_binary(struct file_b *file, size_t *length);
+char *file_read_all_length(struct file_b *file, size_t *length);
 int file_getc(struct file_b *file);
 int file_ungetc(struct file_b *file,char c);
 int file_peek(struct file_b *file);

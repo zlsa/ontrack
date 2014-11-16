@@ -217,6 +217,52 @@ char *file_read_all(struct file_b *file) {
   return(buffer);
 }
 
+uint8_t *file_read_all_binary(struct file_b *file, size_t *length) {
+  ASSERT(file);
+
+  if(!file->open) {
+    log_warn("attempted to read from closed file");
+    return(NULL);
+  }
+
+  int read = 0;
+  int chunk = CHUNK_START;
+  int size = CHUNK_START;
+  int temp;
+  uint8_t *buffer = MALLOC(CHUNK_START+1);
+
+  while(true) {
+    temp  = fread(buffer+read, sizeof(uint8_t), chunk, file->fp);
+    read += temp;
+    if(temp == 0) {
+      break;
+    }
+    if(read >= size-2) {
+      chunk *= 2;
+      size  += chunk;
+      buffer = REALLOC(buffer, size);
+    }
+  }
+
+  *length = read;
+
+  return(buffer);
+}
+
+char *file_read_all_length(struct file_b *file, size_t *length) {
+  ASSERT(file);
+
+  char *s = file_read_all(file);
+
+  *length = 0;
+
+  if(length && s) {
+    *length = strlen(s);
+  }
+
+  return(s);
+}
+
 int file_getc(struct file_b *file) {
   ASSERT(file);
   if(!file->open) {
