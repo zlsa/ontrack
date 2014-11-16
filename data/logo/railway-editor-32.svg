@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="32"
+   height="32"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="railway-editor-32.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="4"
+     inkscape:cx="14.655161"
+     inkscape:cy="10.435422"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1366"
+     inkscape:window-height="727"
+     inkscape:window-x="0"
+     inkscape:window-y="20"
+     inkscape:window-maximized="0"
+     showguides="false"
+     inkscape:guide-bbox="true"
+     inkscape:snap-global="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2985"
+       empspacing="4"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true" />
+    <sodipodi:guide
+       orientation="-0.93632918,0.35112344"
+       position="4,8"
+       id="guide3780" />
+    <sodipodi:guide
+       orientation="-0.93632918,-0.35112344"
+       position="28,8"
+       id="guide3782" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1020.3622)">
+    <path
+       style="opacity:1;fill:#404040;fill-opacity:1;stroke:none"
+       d="M 16 6 C 10.477153 6 6 10.4772 6 16 C 6 21.5228 10.477153 26 16 26 C 21.522847 26 26 21.5228 26 16 C 26 14.248941 25.540779 12.587711 24.75 11.15625 L 23.25 12.65625 C 23.719668 13.674507 24 14.805051 24 16 C 24 20.4183 20.418278 24 16 24 C 11.581722 24 8 20.4183 8 16 C 8 11.5817 11.581722 8 16 8 C 17.189923 8 18.328807 8.2527957 19.34375 8.71875 L 20.8125 7.25 C 19.386567 6.4672945 17.741445 6 16 6 z M 16 9 C 12.134007 9 9 12.134 9 16 C 9 19.866 12.134007 23 16 23 C 19.865993 23 23 19.866 23 16 C 23 15.083491 22.820269 14.208476 22.5 13.40625 L 17.21875 18.6875 L 16.90625 19 L 16.5 19 L 14 19 L 13 19 L 13 18 L 13 15.5 L 13 15.0625 L 13.28125 14.78125 L 18.5625 9.5 C 17.767751 9.1866133 16.906092 9 16 9 z "
+       transform="translate(0,1020.3622)"
+       id="path3820" />
+    <path
+       style="fill:#404040;fill-opacity:1;stroke:none;opacity:1"
+       d="m 14,1038.3622 0,-2.5 9,-9 2.5,2.5 -9,9 z"
+       id="path3890"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccc" />
+  </g>
+</svg>
