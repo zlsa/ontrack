@@ -69,6 +69,7 @@ void program_usage(void) {
   printf("     --test             test all subsystems and exit\n");
   printf("     --verbose          log more (repeat for more effect)\n");
   printf("     --debug            log debug information (repeat for more effect)\n");
+  printf("     --vomit            log ALL THE THINGS (same as --debug --debug)\n");
   printf("  -q --quiet            log less (repeat for more effect)\n");
   printf("  -v --version          show version\n");
   printf("  -h --help             this help\n");
@@ -102,6 +103,8 @@ bool program_parse(void) {
         program->quiet++;
       } else if(strncmp(arg, "debug", strlen(arg)+1) == 0) {
         program->debug++;
+      } else if(strncmp(arg, "vomit", strlen(arg)+1) == 0) {
+        program->debug += 2;
       } else if(strncmp(arg, "test", strlen(arg)+1) == 0) {
         program->test    = true;
       } else {
@@ -155,9 +158,17 @@ bool program_start(void) {
   config_read(program->config, "/usr/share/ontrack/config",           CONFIG_SOURCE_SYSTEM);
   config_read(program->config, "/home/forest/.config/ontrack/config", CONFIG_SOURCE_USER);
 
-  config_vomit(program->config);
-
   struct config_item_b *item;
+
+  // debug/test options
+
+  if((item = config_get_item(program->config, "option.debug")) != NULL)
+    program->debug = config_get_item_int(item);
+
+  if((item = config_get_item(program->config, "option.vomit")) != NULL)
+    program->debug = (config_get_item_bool(item) ? 2 : program->debug);
+
+  // window opening
 
   if((item = config_get_item(program->config, "window.width")) != NULL)
     width = config_get_item_int(item);
@@ -173,6 +184,8 @@ bool program_start(void) {
   window_set_fullscreen(program->window, fullscreen);
   window_set_title(program->window, "onTrack");
   window_open(program->window);
+
+  config_vomit(program->config);
 
   return(true);
 }

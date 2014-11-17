@@ -3,6 +3,7 @@
 #define FILE_H
 
 /* INCLUDES */
+#include "path.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -87,10 +88,11 @@ char *file_read_to(struct file_b *file,char stop);
 
 // tokens
 char *file_get_token(struct file_b *file);
-char *file_get_bool(struct file_b *file,bool *ptr);
-char *file_get_int(struct file_b *file,int *ptr);;
-char *file_get_double(struct file_b *file,double *ptr);
-int file_get_string(struct file_b *file,char **ptr);
+char *file_get_bool(struct file_b *file, bool *ptr);
+char *file_get_int(struct file_b *file, int *ptr);;
+char *file_get_double(struct file_b *file, double *ptr);
+int file_get_string(struct file_b *file, char **ptr);
+int file_get_path(struct file_b *file, struct path_b *path);
 
 // testing
 bool file_test(void);

@@ -3,12 +3,21 @@
 #include "image.h"
 #include "log.h"
 
+#if IMAGE_WEBP
 #include <webp/decode.h>
+#endif
+
+#if IMAGE_PNG
+#define PNG_DEBUG 3
+#include <png.h>
+#endif
 
 struct image_b *image_new(void) {
   struct image_b *image = MALLOC(sizeof(struct image_b));
 
   image->references =  0;
+
+  image->format     = IMAGE_FORMAT_UNKNOWN;
 
   image->width      = -1;
   image->width      = -1;
@@ -36,8 +45,10 @@ bool image_free(struct image_b *image) {
 
   if(image->references == 0) {
     file_free(image->file);
+
     if(image->data)
       FREE(image->data);
+
     FREE(image);
   }
 
@@ -62,12 +73,23 @@ bool image_open(struct image_b *image, char *filename) {
 
   image->data = file_read_all_binary(image->file, &image->data_length);
 
-  VP8StatusCode error = WebPGetInfo(image->data, (size_t) &image->data_length, &image->width, &image->height);
+  log_vomit("data length: %d", image->data_length);
 
-  if(error != 0) {
+#if IMAGE_WEBP
+  int error = WebPGetInfo(image->data, (size_t) &image->data_length, &image->width, &image->height);
+
+  if(error == 0) {
     image->error = IMAGE_ERROR_HEADER;
 
-    log_warn("%d", error);
+    log_warn("WebPGetInfo() returned %d", error);
+    return(true);
+  }
+
+#if 0
+  if(error != VP8_STATUS_OK) {
+    image->error = IMAGE_ERROR_HEADER;
+
+    log_warn("WebPGetInfo() returned %d", error);
 
     switch(error) {
     case VP8_STATUS_OUT_OF_MEMORY:
@@ -97,6 +119,19 @@ bool image_open(struct image_b *image, char *filename) {
     }
     return(false);
   }
+#endif
+
+  image->format = IMAGE_FORMAT_WEBP;
+  log_vomit("%s: WebP", filename);
+  return(true);
+#endif
+
+#if IMAGE_PNG
+
+  image->format = IMAGE_FORMAT_PNG;
+  log_vomit("%s: PNG", filename);
+  return(true);
+#endif
 
   return(true);
 }

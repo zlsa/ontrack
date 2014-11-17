@@ -3,10 +3,15 @@
 #define IMAGE_H
 
 /* INCLUDES */
+#include "options.h"
 #include "file.h"
 #include <stdbool.h>
 
 /* DEFINES */
+#define IMAGE_FORMAT_UNKNOWN (0)
+#define IMAGE_FORMAT_WEBP    (1)
+#define IMAGE_FORMAT_PNG     (2)
+
 #define IMAGE_ERROR_NONE     (0)
 #define IMAGE_ERROR_FILE     (1)
 #define IMAGE_ERROR_HEADER   (2)
@@ -15,6 +20,8 @@
 /* IMAGES */
 struct image_b {
   int references;
+
+  int format;
 
   int width;
   int height;

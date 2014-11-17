@@ -3,6 +3,8 @@
 #define CONFIG_H
 
 /* INCLUDES */
+#include "util.h"
+#include "path.h"
 #include "file.h"
 #include <stdbool.h>
 
@@ -56,7 +58,7 @@ struct config_item_b {
     int int_value;
     double double_value;
     char *string_value;
-    char **path_value;
+    struct path_b *path_value;
   } value;
 
 };

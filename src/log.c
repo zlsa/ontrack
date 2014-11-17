@@ -6,13 +6,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
- 
+
 extern struct program_b *program;
 
 void log_test(const char* format,...) {
   if(program && !program->test) return;
   va_list args;
   fprintf(stdout,"[\033[35m\033[03m TEST   \033[00m]\033[03m ");
+  va_start(args,format);
+  vfprintf(stdout,format,args);
+  va_end(args);
+  fprintf(stdout,"\033[00m\n");
+}
+
+void log_vomit(const char* format,...) {
+  if(program && program->debug < 2) return;
+  va_list args;
+  fprintf(stdout,"\033[32m\033[01m[ VOMIT  ] ");
   va_start(args,format);
   vfprintf(stdout,format,args);
   va_end(args);

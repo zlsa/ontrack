@@ -2,6 +2,7 @@
 #include "log.h"
 #include "util.h"
 #include "file.h"
+#include "path.h"
 
 #include "config.h"
 
@@ -77,13 +78,20 @@ struct config_item_b *config_item_reference(struct config_item_b *item) {
 
 bool config_item_free(struct config_item_b *item) {
   ASSERT(item);
+
   item->references--;
 
   if(item->references <= 0) {
     if(item->key) FREE(item->key);
+
     if(item->type == CONFIG_ITEM_TYPE_STRING && item->value.string_value) {
       FREE(item->value.string_value);
     }
+
+    if(item->type == CONFIG_ITEM_TYPE_PATH) {
+      path_free(item->value.path_value);
+    }
+
     FREE(item);
     return(true);
   }
@@ -157,6 +165,9 @@ bool config_set_item(struct config_b *config, struct config_item_b *item) {
   case CONFIG_ITEM_TYPE_STRING:
     current->value.string_value = MALLOC(strlen(item->value.string_value)+1);
     strncpy(current->value.string_value,item->value.string_value,strlen(item->value.string_value)+1);
+    break;
+  case CONFIG_ITEM_TYPE_PATH:
+    current->value.path_value = path_reference(item->value.path_value);
     break;
   case CONFIG_ITEM_TYPE_DOUBLE:
     current->value.double_value = item->value.double_value;
@@ -235,6 +246,7 @@ char *config_get_item_to_string(struct config_item_b *item) {
   char *s;
   int type = config_get_item_type(item);
   bool bool_value;
+  int len;
 
   switch(type) {
   case CONFIG_ITEM_TYPE_BOOL:
@@ -244,11 +256,23 @@ char *config_get_item_to_string(struct config_item_b *item) {
     strncpy(s, BTOS(bool_value), strlen(BTOS(bool_value)) + 1);
     break;
   case CONFIG_ITEM_TYPE_INT:
-    s = MALLOC(INT_ENOUGH + 2);
-    snprintf(s, INT_ENOUGH + 1, "%d", config_get_item_int(item));
+    s = MALLOC(NUMBER_ENOUGH + 2);
+    snprintf(s, NUMBER_ENOUGH + 1, "%d", config_get_item_int(item));
+    break;
+  case CONFIG_ITEM_TYPE_DOUBLE:
+    s = MALLOC(NUMBER_ENOUGH + 2);
+    snprintf(s, NUMBER_ENOUGH + 1, "%f", config_get_item_double(item));
+    break;
+  case CONFIG_ITEM_TYPE_STRING:
+    len = strlen(item->value.string_value);
+    s = MALLOC(len + 1);
+    strncpy(s, item->value.string_value, len + 1);
+    break;
+  case CONFIG_ITEM_TYPE_PATH:
+    s = path_to_string(item->value.path_value);
     break;
   default:
-    log_never("no handler for %s type",CONFIG_ITEM_TYPE(type));
+    log_never("no handler for %s type", CONFIG_ITEM_TYPE(type));
     EXIT(EXIT_FAILURE);
     break;
   }
@@ -299,15 +323,15 @@ int config_load_item(struct config_item_b *item, struct file_b *file) {
   }
 
   if(strcmp(type,"bool") == 0) {
-    item->type=CONFIG_ITEM_TYPE_BOOL;
+    item->type = CONFIG_ITEM_TYPE_BOOL;
   } else if(strcmp(type,"int") == 0) {
-    item->type=CONFIG_ITEM_TYPE_INT;
+    item->type = CONFIG_ITEM_TYPE_INT;
   } else if(strcmp(type,"double") == 0) {
-    item->type=CONFIG_ITEM_TYPE_DOUBLE;
+    item->type = CONFIG_ITEM_TYPE_DOUBLE;
   } else if(strcmp(type,"string") == 0) {
-    item->type=CONFIG_ITEM_TYPE_STRING;
+    item->type = CONFIG_ITEM_TYPE_STRING;
   } else if(strcmp(type,"path") == 0) {
-    item->type=CONFIG_ITEM_TYPE_PATH;
+    item->type = CONFIG_ITEM_TYPE_PATH;
   } else {
     log_warn("unknown type '%s' on line %d of '%s', discarding; note that the type is required and must be all lowercase",type,file->line,file->filename);
     goto parse;
@@ -332,7 +356,7 @@ int config_load_item(struct config_item_b *item, struct file_b *file) {
     }
     break;
   case CONFIG_ITEM_TYPE_DOUBLE:
-    s=file_get_double(file,&item->value.double_value);
+    s = file_get_double(file,&item->value.double_value);
     if(s) {
       log_warn("'%s' is not a valid double value on line %d of '%s', discarding %s '%s'",s,file->line,file->filename,type,key);
       FREE(s);
@@ -340,7 +364,7 @@ int config_load_item(struct config_item_b *item, struct file_b *file) {
     }
     break;
   case CONFIG_ITEM_TYPE_STRING:
-    c=file_getc(file);
+    c = file_getc(file);
     if(c != '"') {
       if(c == EOF) {
         log_warn("expected a string, got end of file on line %d of '%s'; discarding %s '%s'",c,file->line,file->filename,type,key);
@@ -351,7 +375,11 @@ int config_load_item(struct config_item_b *item, struct file_b *file) {
       else log_warn("expected a double quote '\"', not '%c', on line %d of '%s'; discarding %s '%s'",c,file->line,file->filename,type,key);
       goto parse;
     }
-    file_get_string(file,&item->value.string_value);
+    file_get_string(file, &item->value.string_value);
+    break;
+  case CONFIG_ITEM_TYPE_PATH:
+    item->value.path_value = path_new();
+    file_get_path(file, item->value.path_value);
     break;
   default:
     log_never("somebody added a new type '%s' with no way to parse it on line %d of '%s', discarding %s '%s'",type,file->line,file->filename,type,key);
@@ -360,8 +388,8 @@ int config_load_item(struct config_item_b *item, struct file_b *file) {
   }
 
   int i=0;
-  if((i=file_skip_to_ignore_comment(file,'\n','#')) != 0) {
-    log_warn("%d extraneous character%s at the end of line %d of '%s', discarding %s '%s'",i,S(i),file->line,file->filename,type,key);
+  if((i = file_skip_to_ignore_comment(file,'\n','#')) != 0) {
+    log_warn("%d extraneous character%s at the end of line %d of '%s', discarding %s '%s'", i, S(i), file->line, file->filename, type, key);
   }
 
   goto done;
@@ -376,7 +404,7 @@ int config_load_item(struct config_item_b *item, struct file_b *file) {
   file_skip_to(file,'\n');
   return(RETURN_FAILURE_PARSE);
  done:
-  item->key=key;
+  item->key = key;
   if(type) FREE(type);
   return(RETURN_SUCCESS);
 }
@@ -434,6 +462,8 @@ bool config_load(struct config_b *config, struct file_b *file, int source) {
     config_item_free(item);
     if(file->eof) break;
   }
+
+  config_vomit(config);
 
   return(!errors);
 }
@@ -500,32 +530,31 @@ bool config_write(struct config_b *config, char *filename, int source) {
 
 bool config_test(void) {
   log_test("   == CONFIG ==================================================");
-  bool passed=true;
-  bool status=false;
+  bool passed = true;
+  bool status = false;
 
-  struct config_b *config=config_new();
-  if(config) status=true;
-  if(!status) passed=false;
-  log_test("%sstruct config_b *config=config_new();",BTOF(status));
+  struct config_b *config = config_new();
 
-  status=config_read(config,"test/config",CONFIG_SOURCE_USER);
-  if(!status) passed=false;
-  log_test("%sconfig_read(config,\"test/config\",CONFIG_SOURCE_USER);",BTOF(status));
-
-  status=false;
-  int count=config_get_item_count(config);
-  if(count == 5) status=true;
-  if(!status) passed=false;
-  log_test("%sconfig_get_item_count(config);",BTOF(status));
-
-  status=false;
-  struct config_item_b *item=config_get_item(config,"test_bool");
-  if(item) {
-    status=true;
-      //    log_test("%sstruct config_item_b *item=config_get_item(config,\"bool_test\");",BTOF(status));
-  }
+  if(config)  status = true;
+  log_test("%sstruct config_b *config = config_new();", BTOF(status));
   if(!status) passed = false;
-  log_test("%sstruct config_item_b *item=config_get_item(config,\"bool_test\");", BTOF(status));
+
+  status=config_read(config, "test/config", CONFIG_SOURCE_USER);
+  if(!status) passed = false;
+  log_test("%sconfig_read(config, \"test/config\", CONFIG_SOURCE_USER);", BTOF(status));
+
+  status = false;
+  int count = config_get_item_count(config);
+  if(count == 6) status = true;
+  if(!status)    passed = false;
+  log_test("%sconfig_get_item_count(config);", BTOF(status));
+
+  status = false;
+  struct config_item_b *item = config_get_item(config, "test_bool");
+  if(item)    status = true;
+  if(!status) passed = false;
+
+  log_test("%sstruct config_item_b *item=config_get_item(config, \"bool_test\");", BTOF(status));
 
   status = config_free(config);
   if(!status) passed = false;
@@ -540,7 +569,7 @@ bool config_test(void) {
 
 void config_vomit_item(struct config_item_b *item) {
   char *s = config_get_item_to_string(item);
-  log_debug("%s %s %s = %s", CONFIG_SOURCE(item->source), CONFIG_ITEM_TYPE(item->type), item->key, s);
+  log_vomit("%s %s %s = %s", CONFIG_SOURCE(item->source), CONFIG_ITEM_TYPE(item->type), item->key, s);
 
   FREE(s);
 }
@@ -548,9 +577,10 @@ void config_vomit_item(struct config_item_b *item) {
 void config_vomit(struct config_b *config) {
   int i;
 
+  log_vomit("-- START CONFIG --");
   for(i=0; i<config->items_used; i++) {
-    if(config->items[i]) {
-      config_vomit_item(config->items[i]);
-    }
+    config_vomit_item(config->items[i]);
   }
+  log_vomit("--- END CONFIG ---");
+
 }

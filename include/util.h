@@ -23,7 +23,7 @@
 #define RAD_TO_DEG(rad) ((rad / M_PI) * 180.0)
 #define DEG_TO_RAD(deg) ((deg / 180.0) * M_PI)
 
-#define CHUNK_START            (256)
+#define CHUNK_SIZE             (256)
 
 #define RETURN_SUCCESS         (0)
 #define RETURN_FAILURE_EOF     (1)
@@ -32,7 +32,9 @@
 
 #define PRINT_GL_ERROR(exit) (print_gl_error(exit))
 
-#define INT_ENOUGH ((sizeof(char) * sizeof(int) - 1) / 3 + 2)
+#define NUMBER_ENOUGH          (128)
+
+#define PATH_MAX              (64)
 
 /* FUNCTIONS */
 void *MALLOC(size_t size);

@@ -1,6 +1,7 @@
 
 #include "util.h"
 #include "log.h"
+#include "path.h"
 
 #include "file.h"
 
@@ -197,10 +198,10 @@ char *file_read_all(struct file_b *file) {
     return(NULL);
   }
   int read = 0;
-  int chunk = CHUNK_START;
-  int size = CHUNK_START;
+  int chunk = CHUNK_SIZE;
+  int size = CHUNK_SIZE;
   int temp;
-  char *buffer = MALLOC(CHUNK_START+1);
+  char *buffer = MALLOC(CHUNK_SIZE+1);
   while(true) {
     temp = fread(buffer+read, sizeof(char), chunk, file->fp);
     read+=temp;
@@ -225,11 +226,11 @@ uint8_t *file_read_all_binary(struct file_b *file, size_t *length) {
     return(NULL);
   }
 
-  int read = 0;
-  int chunk = CHUNK_START;
-  int size = CHUNK_START;
+  int read  = 0;
+  int chunk = CHUNK_SIZE;
+  int size  = CHUNK_SIZE;
   int temp;
-  uint8_t *buffer = MALLOC(CHUNK_START+1);
+  uint8_t *buffer = MALLOC(CHUNK_SIZE + 1);
 
   while(true) {
     temp  = fread(buffer+read, sizeof(uint8_t), chunk, file->fp);
@@ -518,8 +519,8 @@ int file_get_string(struct file_b *file, char **ptr) {
     }
     if(escape) {
       if(c == '\n') continue;
-      else if(c == 'n') c='\n';
-      else if(c == '"') c='"';
+      else if(c == 'n') c = '\n';
+      else if(c == '"') c = '"';
       escape=false;
     }
     s[i++]=c;
@@ -527,6 +528,57 @@ int file_get_string(struct file_b *file, char **ptr) {
   s[i]='\0';
   *ptr=s;
   return(i);
+}
+
+// returns number of characters read
+int file_get_path(struct file_b *file, struct path_b *path) {
+
+  int size       = FILE_PATH_CHUNK_SIZE;
+  char *filename = MALLOC(size + 1);
+  int i          = 0;
+  int c;
+
+  bool escape    = false;
+
+  while(true) {
+    c = file_getc(file);
+
+    if(c == '\\') {
+      escape = true;
+      continue;
+    }
+
+    if(c == ':' || c == '\n' || file->eof) {
+      if(i > 0) {
+        filename[i] = '\0';
+        path_add(path, filename);
+        i = 0;
+      }
+
+      if(c == ':') continue;
+
+      break;
+    }
+
+    if(escape) {
+      if(c == '\n') continue;
+      if(c == 'n') c = '\n';
+      else         c = c;
+    }
+
+    if(i + 1 > size) {
+      size *= 2;
+      filename = REALLOC(filename, size + 1);
+    }
+
+    filename[i] = c;
+
+    i++;
+  }
+
+  FREE(filename);
+
+  return(0);
 }
 
 /* TESTING */

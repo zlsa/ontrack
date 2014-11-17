@@ -16,7 +16,20 @@
    inkscape:version="0.48.5 r10040"
    sodipodi:docname="32.svg">
   <defs
-     id="defs4" />
+     id="defs4">
+    <filter
+       height="1.2832251"
+       y="-0.14161257"
+       width="1.0577949"
+       x="-0.028897436"
+       id="filter3870"
+       inkscape:collect="always">
+      <feGaussianBlur
+         id="feGaussianBlur3872"
+         stdDeviation="0.78300197"
+         inkscape:collect="always" />
+    </filter>
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -25,18 +38,19 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="8.8960173"
-     inkscape:cy="17.32995"
+     inkscape:cx="19.126303"
+     inkscape:cy="7.3103747"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="true"
+     showgrid="false"
      inkscape:window-width="1366"
      inkscape:window-height="727"
      inkscape:window-x="0"
      inkscape:window-y="20"
      inkscape:window-maximized="0"
      showguides="false"
-     inkscape:guide-bbox="true">
+     inkscape:guide-bbox="true"
+     inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
        id="grid2985"
@@ -45,13 +59,17 @@
        enabled="true"
        snapvisiblegridlinesonly="true" />
     <sodipodi:guide
-       orientation="-0.93632918,0.35112344"
+       orientation="-0.89442719,0.4472136"
        position="4,8"
        id="guide3780" />
     <sodipodi:guide
-       orientation="-0.93632918,-0.35112344"
+       orientation="-0.89442719,-0.4472136"
        position="28,8"
        id="guide3782" />
+    <sodipodi:guide
+       orientation="1,0"
+       position="-20,1"
+       id="guide4120" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
@@ -61,7 +79,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -70,10 +88,27 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-1020.3622)">
-    <path
-       style="opacity:0.8;fill:#000000;fill-opacity:1;stroke:none"
-       d="m 16,1026.3622 c -5.522847,0 -10,4.4772 -10,10 0,5.5228 4.477153,10 10,10 5.522847,0 10,-4.4772 10,-10 0,-5.5228 -4.477153,-10 -10,-10 z m 0,2 c 4.418278,0 8,3.5817 8,8 0,4.4183 -3.581722,8 -8,8 -4.418278,0 -8,-3.5817 -8,-8 0,-4.4183 3.581722,-8 8,-8 z m 0,1 c -3.865993,0 -7,3.134 -7,7 0,3.866 3.134007,7 7,7 3.865993,0 7,-3.134 7,-7 0,-3.866 -3.134007,-7 -7,-7 z m 0,5 c 1.104569,0 2,0.8954 2,2 0,1.1046 -0.895431,2 -2,2 -1.104569,0 -2,-0.8954 -2,-2 0,-1.1046 0.895431,-2 2,-2 z"
-       id="path3820"
-       inkscape:connector-curvature="0" />
+    <g
+       id="g4257"
+       transform="translate(-118.98492,-25.635)">
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:none"
+         d="m 133.48492,1058.9972 -0.5,1 5,0 -0.5,-1 z"
+         id="path3852"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path3854"
+         d="m 131.98492,1061.9972 -1,2 9,0 -1,-2 z"
+         style="fill:#000000;fill-opacity:1;stroke:none"
+         sodipodi:nodetypes="ccccc" />
+      <path
+         sodipodi:nodetypes="ccccc"
+         style="fill:#000000;fill-opacity:1;stroke:none"
+         d="m 129.98492,1065.9972 -1.5,3 14,0 -1.5,-3 z"
+         id="path3856"
+         inkscape:connector-curvature="0" />
+    </g>
   </g>
 </svg>

@@ -6,3 +6,6 @@ ontrack
 *.css
 .sass-cache
 *.map
+
+*.blend1
+*.blend2
