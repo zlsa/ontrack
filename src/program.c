@@ -8,7 +8,7 @@
 #include "program.h"
 
 #include <stdio.h>
-
+#include <stdlib.h>
 #include <string.h>
 
 /* BLOCK */
@@ -155,8 +155,25 @@ bool program_start(void) {
   int height      = 768;
   bool fullscreen = false;
 
+  // read system-wide config
   config_read(program->config, "/usr/share/ontrack/config",           CONFIG_SOURCE_SYSTEM);
-  config_read(program->config, "/home/forest/.config/ontrack/config", CONFIG_SOURCE_USER);
+
+  // read local config
+  char *home             = getenv("HOME");
+  char *home_config_path = "/.config/ontrack/config";
+  char *home_config      = NULL;
+
+  if(!home) {
+    log_warn("environment variable HOME is not defined");
+  } else {
+    home_config      = MALLOC(strlen(home) + strlen(home_config_path) + 1);
+    strncpy(home_config, home, strlen(home));
+    strncpy(home_config + strlen(home), home_config_path, strlen(home_config_path) + 1);
+
+    config_read(program->config, home_config, CONFIG_SOURCE_USER);
+
+    FREE(home_config);
+  }
 
   struct config_item_b *item;
 

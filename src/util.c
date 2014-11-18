@@ -17,6 +17,7 @@ void *MALLOC(size_t size) {
 
   memory_blocks++;
   memory_blocks_total++;
+
   return(ptr);
 }
 
@@ -40,6 +41,14 @@ void *FREE(void *ptr) {
 
   free(ptr);
   memory_blocks--;
+
+  return(NULL);
+}
+
+void *_FREE(void *ptr) {
+  ASSERT(ptr);
+
+  free(ptr);
 
   return(NULL);
 }

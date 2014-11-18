@@ -40,6 +40,7 @@
 void *MALLOC(size_t size);
 void *REALLOC(void *ptr,size_t size);
 void *FREE(void *ptr);
+void *_FREE(void *ptr);
 
 void EXIT(int code);
 

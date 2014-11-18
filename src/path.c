@@ -69,6 +69,23 @@ bool path_add(struct path_b *path, char *pathname) {
   return(true);
 }
 
+int path_get_length(struct path_b *path) {
+  ASSERT(path);
+
+  return(path->items_used);
+}
+
+// returns NULL for invalid index
+char *path_get(struct path_b *path, int index) {
+  ASSERT(path);
+
+  if(index > path->items_used) {
+    return(NULL);
+  }
+
+  return(path->items[index]);
+}
+
 char *path_to_string(struct path_b *path) {
   ASSERT(path);
 
