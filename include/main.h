@@ -10,4 +10,7 @@
 
 #define NAME "onTrack"
 
+void exit_cleanup(void);
+void test(void);
+
 #endif

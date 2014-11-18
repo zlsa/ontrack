@@ -2,6 +2,9 @@
 #include "util.h"
 #include "log.h"
 #include "path.h"
+#include "config.h"
+#include "program.h"
+#include "main.h"
 
 #include "file.h"
 
@@ -12,6 +15,8 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+extern struct program_b *program;
 
 /* BLOCK */
 
@@ -277,6 +282,7 @@ int file_getc(struct file_b *file) {
     errno=0;
     c=getc(file->fp);
   }
+
   if(c == EOF) {
     if(errno) {
       log_warn("error while reading from '%s': %s", file->filename, strerror(errno));
@@ -286,6 +292,7 @@ int file_getc(struct file_b *file) {
     }
     return(EOF);
   }
+
   if(c == '\n') file->line++;
   return(c);
 }
@@ -428,16 +435,16 @@ char *file_read_to(struct file_b *file, char stop) {
 
 // caller must free return value
 char *file_get_token(struct file_b *file) {
-  int size=FILE_TOKEN_START_SIZE;
+  int size = FILE_TOKEN_START_SIZE;
   int c;
-  int i=0;
-  char *s=MALLOC(size);
+  int i   = 0;
+  char *s = MALLOC(size);
   while(true) {
-    c=file_getc(file);
+    c = file_getc(file);
     if(file->eof) break;
     if(i-1 >= size) {
-      size*=2;
-      s=REALLOC(s, size);
+      size *= 2;
+      s     = REALLOC(s, size);
     }
     if(istoken(c)) {
       s[i++]=c;
@@ -446,8 +453,75 @@ char *file_get_token(struct file_b *file) {
       break;
     }
   }
+
   s[i]='\0';
   return(s);
+}
+
+// caller must free return value
+char *file_get_variable(struct file_b *file) {
+
+  int size = FILE_TOKEN_START_SIZE;
+  int c;
+  int i   = 0;
+  char *s = MALLOC(size);
+
+  while(true) {
+    c = file_getc(file);
+
+    if(file->eof) break;
+
+    if(i-1 >= size) {
+      size *= 2;
+      s     = REALLOC(s, size);
+    }
+
+    if(istoken(c)) {
+      s[i++]=c;
+    } else {
+      file_ungetc(file, c);
+      break;
+    }
+
+  }
+
+  s[i]='\0';
+
+  if(file->eof) {
+    log_warn("reached end of file while parsing inline variable on line %d of '%s'", file->line, file->filename);
+    return(NULL);
+  }
+
+  if(file_getc(file) != '}') {
+    log_warn("expected closing '}' while parsing inline variable on line %d of '%s'", file->line, file->filename);
+    return(NULL);
+  }
+
+  int len = strlen(s);
+
+  if(len == 0) {
+    log_warn("zero-length inline variable on line %d of '%s'", file->line, file->filename);
+    return(NULL);
+  }
+
+  if(program) {
+    struct config_item_b *item = config_get_item(program->config, s);
+
+    if(!item) {
+      log_warn("nonexistent inline variable '%s' on line %d of '%s'", s, file->line, file->filename);
+      FREE(s);
+      return(NULL);
+    }
+
+    FREE(s);
+    return(config_get_item_to_string(item));
+
+  } else {
+    log_warn("not booted up yet");
+  }
+
+  return(NULL);
+
 }
 
 // if error,  returns pointer to string
@@ -495,38 +569,44 @@ char *file_get_double(struct file_b *file, double *ptr) {
 
 // returns number of characters read
 int file_get_string(struct file_b *file, char **ptr) {
-  int size=FILE_TOKEN_START_SIZE;
+  int size = FILE_TOKEN_START_SIZE;
   int c;
-  int i=0;
-  char *s=MALLOC(size);
+  int i    = 0;
+  char *s  = MALLOC(size + 1);
 
   bool escape=false;
 
   while(true) {
     c=file_getc(file);
     if(file->eof) break;
+
     if(i-1 >= size) {
-      size*=2;
-      s=REALLOC(s, size);
+      size *= 2;
+      s     = REALLOC(s, size + 1);
     }
+
     if(c == '\\') {
       escape=true;
       continue;
     }
+
     if(c == '"' && !escape) {
-      //      file_ungetc(file, c);
       break;
     }
+
     if(escape) {
       if(c == '\n') continue;
       else if(c == 'n') c = '\n';
       else if(c == '"') c = '"';
       escape=false;
     }
-    s[i++]=c;
+
+    s[i++] = c;
   }
-  s[i]='\0';
-  *ptr=s;
+
+  s[i] = '\0';
+  *ptr = s;
+
   return(i);
 }
 

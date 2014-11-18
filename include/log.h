@@ -2,6 +2,8 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include "options.h"
+
 void log_test(const char* format,...);
 void log_vomit(const char* format,...);
 void log_debug(const char* format,...);

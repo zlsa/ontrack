@@ -104,7 +104,7 @@ bool program_parse(void) {
       } else if(strncmp(arg, "debug", strlen(arg)+1) == 0) {
         program->debug++;
       } else if(strncmp(arg, "vomit", strlen(arg)+1) == 0) {
-        program->debug += 2;
+        program->debug = 2;
       } else if(strncmp(arg, "test", strlen(arg)+1) == 0) {
         program->test    = true;
       } else {
@@ -187,11 +187,21 @@ bool program_start(void) {
 
   config_vomit(program->config);
 
+  program->state = PROGRAM_STATE_LOADING;
+
+  program->state = PROGRAM_STATE_RUNNING;
+
   return(true);
 }
 
 void program_end(void) {
+  log_vomit("program end");
+
   window_end();
 
-  config_write(program->config, "/home/forest/.config/ontrack/config", CONFIG_SOURCE_USER | CONFIG_SOURCE_RUNTIME);
+  if(program->state == PROGRAM_STATE_RUNNING) {
+    config_write(program->config, "/home/forest/.config/ontrack/config", CONFIG_SOURCE_USER | CONFIG_SOURCE_RUNTIME);
+  }
+
+  program->state = PROGRAM_STATE_SHUTDOWN;
 }

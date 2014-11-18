@@ -20,6 +20,7 @@ void log_test(const char* format,...) {
 }
 
 void log_vomit(const char* format,...) {
+#if LOG_VOMIT
   if(program && program->debug < 2) return;
   va_list args;
   fprintf(stdout,"\033[32m\033[01m[ VOMIT  ] ");
@@ -27,9 +28,11 @@ void log_vomit(const char* format,...) {
   vfprintf(stdout,format,args);
   va_end(args);
   fprintf(stdout,"\033[00m\n");
+#endif
 }
 
 void log_debug(const char* format,...) {
+#if LOG_DEBUG
   if(program && !program->debug) return;
   va_list args;
   fprintf(stdout,"[\033[03m DEBUG  \033[00m]\033[03m ");
@@ -37,6 +40,7 @@ void log_debug(const char* format,...) {
   vfprintf(stdout,format,args);
   va_end(args);
   fprintf(stdout,"\033[00m\n");
+#endif
 }
 
 void log_info(const char* format,...) {

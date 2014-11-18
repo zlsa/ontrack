@@ -298,7 +298,7 @@ int config_load_item(struct config_item_b *item, struct file_b *file) {
   file_skip_whitespace_no_newline(file);
   if(file->eof) goto eof;
 
-  key=file_get_token(file);
+  key = file_get_token(file);
   if(file->eof) goto eof;
 
   file_skip_whitespace_no_newline(file);
@@ -525,6 +525,7 @@ bool config_write(struct config_b *config, char *filename, int source) {
   file_close(file);
   file_free(file);
 
+  log_vomit("wrote config file '%s'", filename);
   return(errors);
 }
 

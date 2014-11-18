@@ -28,6 +28,7 @@ struct program_b *program = NULL;
 void exit_cleanup(void) {
   bool normal = false;
   bool quiet  = false;
+
   if(program) {
     if(program->exit_code == EXIT_SUCCESS) normal = true;
     if(program->quiet > 0) quiet = true;
@@ -38,12 +39,38 @@ void exit_cleanup(void) {
   } else {
     log_warn("we hadn't even got going yet...");
   }
+
   if(memory_blocks != 0) {
     log_warn("did not free %d block%s (cumulative blocks: %d)", memory_blocks,
              S(memory_blocks), memory_blocks_total);
   } else if(normal) {
     if(!quiet) log_info("exiting normally");
   }
+}
+
+void test(void) {
+  int passed = 0;
+  int total  = 3;
+
+  log_test("(note that these tests require you to run from {ONTRACK_ROOT}/src)");
+
+  if(file_test())   passed++;
+  if(config_test()) passed++;
+  if(image_test())  passed++;
+
+  log_test("   == RESULTS =================================================");
+
+  if(passed == total)  log_test("%sall tests passed", BTOF(true));
+  else if(passed == 0) log_test("%sall tests failed...", BTOF(false));
+  else log_test("%s%d/%d test%s passed", BTOF(false), passed, total, S(total));
+
+  /* log_test("test is for extra-low-priority self-testing messages"); */
+  /* log_debug("debug is for very low-priority messages that might diagnose problems"); */
+  /* log_info("info is for low-priority user-facing information"); */
+  /* log_notice("notice is for noncritical but potentially unexpected warnings"); */
+  /* log_warn("warning is for unexpected but noncritical errors"); */
+  /* log_never("something impossible has happened (the proverbial 'default')"); */
+  /* log_fatal("something has gone seriously wrong. BAIL OUT FOLKS, WE'RE GOING DOWN!"); */
 }
 
 int main(int argc,char **argv) {
@@ -63,28 +90,7 @@ int main(int argc,char **argv) {
 
   /* TESTING ONLY */
   if(program->test) {
-    int passed = 0;
-    int total  = 3;
-
-    log_test("(note that these tests require you to run from $ONTRACK_ROOT/src)");
-
-    if(file_test())   passed++;
-    if(config_test()) passed++;
-    if(image_test())  passed++;
-
-    log_test("   == RESULTS =================================================");
-
-    if(passed == total)  log_test("%sall tests passed", BTOF(true));
-    else if(passed == 0) log_test("%sall tests failed...", BTOF(false));
-    else log_test("%s%d/%d test%s passed", BTOF(false), passed, total, S(total));
-
-    /* log_test("test is for extra-low-priority self-testing messages"); */
-    /* log_debug("debug is for very low-priority messages that might diagnose problems"); */
-    /* log_info("info is for low-priority user-facing information"); */
-    /* log_notice("notice is for noncritical but potentially unexpected warnings"); */
-    /* log_warn("warning is for unexpected but noncritical errors"); */
-    /* log_never("something impossible has happened (the proverbial 'default')"); */
-    /* log_fatal("something has gone seriously wrong. BAIL OUT FOLKS, WE'RE GOING DOWN!"); */
+    test();
     return(EXIT_SUCCESS);
   }
 
@@ -97,7 +103,7 @@ int main(int argc,char **argv) {
   glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
 
   float last_time = glfwGetTime();
-  int frames = 0;
+  int frames = 0, frames_total = 0;
 
   glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
@@ -147,6 +153,7 @@ int main(int argc,char **argv) {
     glfwPollEvents();
 
     frames += 1;
+    frames_total += 1;
     if(glfwGetTime() - last_time > 2) {
       int fps = (float) frames / ((glfwGetTime() - last_time) / 2);
       log_info("FPS: %d", fps);
@@ -155,8 +162,10 @@ int main(int argc,char **argv) {
     }
 
     PRINT_GL_ERROR(true);
-    //    clear_gl_error();
+    clear_gl_error();
   }
+
+  log_vomit("total frames: %d", frames_total);
 
   return(EXIT_SUCCESS);
 }
