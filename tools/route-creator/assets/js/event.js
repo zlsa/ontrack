@@ -31,6 +31,17 @@ EVENT.bind('event', function(ev) {
 
   if(category == 'route') {
     ROUTE.fire('event', ev);
+  } else if(category == 'help') {
+
+    UI.fire('menu', {
+      items: [
+        ['text',   'To pan the map, drag with the middle mouse button.'],
+        ['text',   'To add a new node between two nodes, drag the gray dot between them.'],
+        ['text',   'To create a new track, right-click and select "add track".'],
+        ['button', 'Close']
+      ]
+    });
+
   }
 
 });

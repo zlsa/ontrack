@@ -11,5 +11,18 @@ CANVAS.bind('resize', function(size) {
 });
 
 CANVAS.bind('tick', function() {
-//  CANVAS.context.fillRect(0, 0, 1000, 100);
+  var cc = CANVAS.context;
+
+  cc.clearRect(0, 0, cc.canvas.width, cc.canvas.height);
+
+  cc.save();
+
+  cc.translate(cc.canvas.width * 0.5, cc.canvas.height * 0.5);
+
+  var pos = UI.fire('convert', [0, 0]);
+  cc.translate(pos[0] - 50, pos[1] - 50);
+
+  cc.fillRect(0, 0, 100, 100);
+
+  cc.restore();
 });

@@ -1,7 +1,7 @@
 
 var Segment = Class.extend({
   init: function() {
-    this.type = null;
+    this.type = 'bezier';
   }
 });
 
@@ -18,19 +18,28 @@ ROUTE.bind('ready', function() {
   ROUTE.track = new Track();
 });
 
-ROUTE.bind('ready', function() {
-  ROUTE.roots = [];
+ROUTE.bind('convert', function(mouse) {
+  var map = [mouse[0], mouse[1]];
+
+  map[0] += UI.pan[0];
+  map[1] += UI.pan[1];
+
+  map[0] *= UI.zoom;
+  map[1] *= UI.zoom;
+
+  return map;
 });
 
 ROUTE.bind('clear-prompt', function(ev) {
 
-  UI.fire('prompt', {
-    title:   'Clear current route?',
-    buttons: [
-      ['Cancel', false],
-      ['OK',     true]
+  UI.fire('menu', {
+    items: [
+      ['text',   'Clear current route?'],
+      ['button', 'Cancel', false],
+      ['button', 'OK',     true]
     ],
     callback: function(choice) {
+      console.log(choice);
       if(choice) {
         ROUTE.fire('clear');
       }
@@ -41,20 +50,31 @@ ROUTE.bind('clear-prompt', function(ev) {
 
 ROUTE.bind('save-prompt', function(ev) {
 
-  UI.fire('prompt', {
-    title: 'Route saving isn\'t implemented yet.',
+  UI.fire('menu', {
+    items: [
+      ['text',   'Route saving isn\'t implemented yet.'],
+      ['button', 'Close']
+    ]
   });
 
 });
 
 ROUTE.bind('open-prompt', function(ev) {
 
-    UI.fire('prompt', {
-    title: 'Route opening isn\'t implemented yet.',
+  UI.fire('menu', {
+    items: [
+      ['text',   'Route opening isn\'t implemented yet.'],
+      ['button', 'Close']
+    ]
   });
 
 });
 
+ROUTE.bind('click', function(e) {
+
+  var pos = ROUTE.fire('convert', [e.pageX, e.pageY]);
+
+});
 
 ROUTE.bind('event', function(ev) {
   var category = ev[0];
