@@ -23,6 +23,7 @@ ROUTE.bind('ready', function() {
 });
 
 ROUTE.bind('clear-prompt', function(ev) {
+
   UI.fire('prompt', {
     title:   'Clear current route?',
     buttons: [
@@ -35,14 +36,23 @@ ROUTE.bind('clear-prompt', function(ev) {
       }
     }
   });
+
 });
 
 ROUTE.bind('save-prompt', function(ev) {
-  alert('route saving is not implemented yet');
+
+  UI.fire('prompt', {
+    title: 'Route saving isn\'t implemented yet.',
+  });
+
 });
 
 ROUTE.bind('open-prompt', function(ev) {
-  alert('route opening is not implemented yet');
+
+    UI.fire('prompt', {
+    title: 'Route opening isn\'t implemented yet.',
+  });
+
 });
 
 

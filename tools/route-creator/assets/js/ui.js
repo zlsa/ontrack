@@ -7,7 +7,9 @@ UI.Prompt = Class.extend({
 
     this.title = '';
     this.desc  = '';
-    this.buttons = [];
+    this.buttons = [
+      ['OK',     true]
+    ];
 
     this.callback = null;
 
@@ -81,7 +83,8 @@ UI.Prompt = Class.extend({
   },
 
   button: function(index) {
-    this.callback(this.buttons[index][1]);
+    if(this.callback)
+      this.callback(this.buttons[index][1]);
     this.hide();
     this.destroy();
   },
