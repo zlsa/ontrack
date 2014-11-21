@@ -54,7 +54,7 @@ sedans or tractor-trailers).
 
 # License
 
-All code is MIT licensed:
+All code is licensed under the MIT license.
 
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
@@ -75,4 +75,4 @@ All code is MIT licensed:
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-All art, including 3D models and audio files, are licensed under CC0.
+All art, including 3D models and audio files, are licensed under the CC0 license.
