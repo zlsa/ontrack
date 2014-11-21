@@ -1,0 +1,27 @@
+
+@import 'reset';
+
+@import 'header';
+
+@import 'prompt';
+
+@import 'veil';
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+html {
+  background-color: #ddd;
+
+  color: #fff;
+
+  font-family: 'Encode Sans Condensed', 'Open Sans', sans-serif;
+  font-size: 80%;
+}
+
+body.veil {
+  -webkit-filter: grayscale(0.5);
+}

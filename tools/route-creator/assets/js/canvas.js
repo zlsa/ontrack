@@ -11,5 +11,5 @@ CANVAS.bind('resize', function(size) {
 });
 
 CANVAS.bind('tick', function() {
-  CANVAS.context.fillRect(0, 0, 1000, 100);
+//  CANVAS.context.fillRect(0, 0, 1000, 100);
 });

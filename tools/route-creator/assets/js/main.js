@@ -1,8 +1,10 @@
 
 $(document).ready(function() {
+
   TIME.fire('ready');
   CANVAS.fire('ready');
   EVENT.fire('ready');
+  UI.fire('ready');
 
   $(window).resize(resize);
 

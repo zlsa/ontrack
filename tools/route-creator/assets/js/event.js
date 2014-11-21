@@ -29,8 +29,8 @@ EVENT.bind('event', function(ev) {
 
   console.log(ev);
 
-  if(category == 'railway') {
-    RAILWAY.fire('event', ev);
+  if(category == 'route') {
+    ROUTE.fire('event', ev);
   }
 
 });
